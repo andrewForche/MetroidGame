@@ -8,6 +8,9 @@ public class PlayerController2D : MonoBehaviour
 
     [Header("Jump")]
     [SerializeField] private float jumpVelocity = 12f;
+    [SerializeField] private float jumpCutMultiplier = 0.5f;
+
+    private bool jumpHeld;
 
     [Header("Ground Check")]
     [SerializeField] private Transform groundCheck;
@@ -31,6 +34,8 @@ public class PlayerController2D : MonoBehaviour
         // capture in Update so we don't miss it
         if (Input.GetButtonDown("Jump"))
             jumpPressed = true;
+        
+        jumpHeld = Input.GetButton("Jump");
     }
 
     private void FixedUpdate()
@@ -41,6 +46,12 @@ public class PlayerController2D : MonoBehaviour
         // Jump
         if (jumpPressed && IsGrounded())
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpVelocity);
+
+        // If player released jump while rising, cut jump short
+        if (!jumpHeld && rb.linearVelocity.y > 0f)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
+        }
 
         jumpPressed = false;
     }
