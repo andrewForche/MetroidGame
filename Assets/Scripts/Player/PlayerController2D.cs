@@ -12,6 +12,14 @@ public class PlayerController2D : MonoBehaviour
 
     private bool jumpHeld;
 
+    [Header("Jump Feel")]
+    [SerializeField] private float coyoteTime = 0.1f;      // seconds
+    [SerializeField] private float jumpBufferTime = 0.1f;  // seconds
+
+    private float coyoteTimer;
+    private float jumpBufferTimer;
+
+
     [Header("Ground Check")]
     [SerializeField] private Transform groundCheck;
     [SerializeField] private Vector2 groundCheckSize = new Vector2(0.6f, 0.1f);
@@ -28,32 +36,40 @@ public class PlayerController2D : MonoBehaviour
 
     private void Update()
     {
-        // -1, 0, 1 (snappy)
         moveInput = Input.GetAxisRaw("Horizontal");
 
-        // capture in Update so we don't miss it
+        // Buffer jump input
         if (Input.GetButtonDown("Jump"))
-            jumpPressed = true;
-        
+            jumpBufferTimer = jumpBufferTime;
+
         jumpHeld = Input.GetButton("Jump");
+
+        // timers tick down in real time
+        jumpBufferTimer -= Time.deltaTime;
+        coyoteTimer -= Time.deltaTime;
+
+        // refresh coyote timer while grounded
+        if (IsGrounded())
+            coyoteTimer = coyoteTime;
     }
 
     private void FixedUpdate()
     {
-        // Set X velocity directly for arcade feel
         rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);
 
-        // Jump
-        if (jumpPressed && IsGrounded())
+        // If jump was pressed recently AND we are grounded (or within coyote time), jump
+        if (jumpBufferTimer > 0f && coyoteTimer > 0f)
+        {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpVelocity);
+            jumpBufferTimer = 0f; // consume buffer
+            coyoteTimer = 0f;     // optional: prevents double-trigger
+        }
 
-        // If player released jump while rising, cut jump short
+        // Variable jump height (jump cut)
         if (!jumpHeld && rb.linearVelocity.y > 0f)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
         }
-
-        jumpPressed = false;
     }
 
     private bool IsGrounded()
