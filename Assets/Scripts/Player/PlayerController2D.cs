@@ -50,6 +50,8 @@ public class PlayerController2D : MonoBehaviour
     // Cached input/state
     private float moveInput;    // -1, 0, +1 for snappy movement
     private bool jumpHeld;
+    public int Facing { get; private set; } = 1; // 1 = right, -1 = left
+
 
     // Timers (core of buffer/coyote)
     private float coyoteTimer;
@@ -86,6 +88,8 @@ public class PlayerController2D : MonoBehaviour
             // Add a tiny deadzone so controller drift doesn't cause movement.
             float x = input.Move.x;
             moveInput = Mathf.Abs(x) > 0.10f ? Mathf.Sign(x) : 0f;
+            if (moveInput != 0)
+                Facing = (int)moveInput;
 
             jumpHeld = input.JumpHeld;
 
